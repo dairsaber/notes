@@ -1,4 +1,4 @@
-# [Centos8安装MySQL5.7](https://www.cnblogs.com/sanduzxcvbnm/p/13418417.html)
+
 
 ### 1. 添加MySQL存储库
 
