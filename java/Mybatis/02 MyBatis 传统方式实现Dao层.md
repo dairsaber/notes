@@ -87,7 +87,7 @@
       select: 查询功能的标签
       id属性: 唯一标识
       resultType属性: 指定结果映射对象的类型
-      parameterType属性: 指定参数银蛇对象类型
+      parameterType属性: 指定参数映射对象类型
     -->
     <select id="selectAll" resultType="student">
         SELECT * FROM student;
