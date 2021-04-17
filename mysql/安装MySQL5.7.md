@@ -1,4 +1,4 @@
-
+## centos8的安装
 
 ### 1. 添加MySQL存储库
 
@@ -107,13 +107,79 @@ mysql-tools-community      MySQL Tools Community                            105
 mysql57-community          MySQL 5.7 Community Server
 ```
 
-### 6. 添加字符集
+## ubuntu安装mysql 
+
+以下命令我都是在root用户下安装的所以就没有加sudo, 首先这边确定用了国内的镜像怎么改镜像就去看Linux相应的文档
+
+### 1. 用apt安装 这里切换到清华源好像才有5.7的版本
 
 ```shell
-vi /etc/my.cnf
+# 执行下面安装命令
+ 
+# 安装mysql5.7服务端
+sudo apt-get install mysql-server-5.7
+ 
+# 安装mysql5.7客户端
+sudo apt-get install mysql-client-5.7
 ```
 
-#### 添加 
+### 2. 用deb包安装
+
+```shell
+mkdir mysql-5.7.33
+cd mysql-5.7.33
+# 下载
+wget https://cdn.mysql.com//Downloads/MySQL-5.7/mysql-server_5.7.33-1ubuntu18.04_amd64.deb-bundle.tar
+# 解压到install
+cd install
+tar -xvf mysql-server_5.7.33-1ubuntu18.04_amd64.deb-bundle.tar -C /root/mysql-5.7.33/install
+```
+
+```
+libmysqlclient20_5.7.33-1ubuntu18.04_amd64.deb
+libmysqlclient-dev_5.7.33-1ubuntu18.04_amd64.deb
+libmysqld-dev_5.7.33-1ubuntu18.04_amd64.deb
+mysql-client_5.7.33-1ubuntu18.04_amd64.deb
+mysql-common_5.7.33-1ubuntu18.04_amd64.deb
+mysql-community-client_5.7.33-1ubuntu18.04_amd64.deb
+mysql-community-server_5.7.33-1ubuntu18.04_amd64.deb
+mysql-community-source_5.7.33-1ubuntu18.04_amd64.deb
+mysql-community-test_5.7.33-1ubuntu18.04_amd64.deb
+mysql-server_5.7.33-1ubuntu18.04_amd64.deb
+mysql-testsuite_5.7.33-1ubuntu18.04_amd64.deb
+```
+
+### 3. 用dpkg进行安装
+
+```shell
+dpkg -i mysql-common_5.7.33-1ubuntu18.04_amd64.deb
+dpkg -i lib*.deb
+dpkg -i mysql-community-client_5.7.33-1ubuntu18.04_amd64.deb
+# 中间如果提示依赖没安装的话 就按提示安装以下在执行安装client和server的操作
+dpkg -i mysql-community-server_5.7.33-1ubuntu18.04_amd64.deb
+```
+
+### 4. 检查mysql版本和状态
+
+```shell
+mysql -V # 查看mysql版本
+netstat -tap | grep mysql # 查看mysql服务
+```
+
+
+
+## 通用操作
+
+### 1. 添加字符集
+
+```shell
+#centos
+vi /etc/my.cnf
+#ubuntu
+vim /etc/mysql/mysql.conf.d/mysqld.cnf
+```
+
+#### 添加
 
 ```shell
 # For advice on how to change settings please see
@@ -157,16 +223,20 @@ default-character-set=utf8
 
 ```
 
-### 7. 启动MySql
+### 2. 启动MySql
 
 ```shell
 systemctl start mysqld
+#ubuntu
+service mysql start
 ```
 
-### 8. 查看启动状态
+### 3. 查看启动状态
 
 ```shell
 systemctl status mysqld
+#ubuntu
+service mysql status
 ```
 
 #### 出现以下信息
@@ -185,16 +255,19 @@ Loaded: loaded (/usr/lib/systemd/system/mysqld.service; enabled; vendor preset: 
            ?..21349 /usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid
 ```
 
-### 9. 设置开机启动
+### 4. 设置开机启动
 
 ```shell
 systemctl enable mysqld
+# ubuntu 下比较麻烦自行查找
 ```
 
-### 10. 获取安装mysql后生成的临时密码，用于登录
+### 5. 获取安装mysql后生成的临时密码，用于登录
 
 ```shell
 grep 'temporary password' /var/log/mysqld.log
+#ubuntu 根据下面的命令对root进行设置
+sudo mysql_secure_installation
 ```
 
 #### 如果出现如下列信息，密码为: BL=azx(1u;Br
@@ -203,13 +276,13 @@ grep 'temporary password' /var/log/mysqld.log
 2020-02-22T03:05:17.741049Z 1 [Note] A temporary password is generated for root@localhost: BL=azx(1u;Br
 ```
 
-### 11. 登录MySql
+### 6. 登录MySql
 
 ```shell
-mysql -uroot -p
+mysql -u root -p
 ```
 
-### 12. 修改登录密码
+### 7. 修改登录密码
 
 #### 正常情况下
 
@@ -235,26 +308,59 @@ set global validate_password_length=1;
 set password=password('dairsaber');// 我这边设置了dairsaber
 ```
 
-### 13. 授予远程连接权限
+### 8. 授予远程连接权限
 
 ```shell
 grant all privileges on *.* to 'root' @'%' identified by 'dairsaber'; // 最后这个dairsaber 是自己修改的密码
 
 // 刷新授权
-flush privileges
+flush privileges;
 ```
 
-### 14. 关闭linux的防火墙
+```
+Ubuntu中
+在 /etc/mysql/mysql.conf.d/mysqld.cnf找到bind-address = 127.0.0.1
+注释掉这行，如：#bind-address = 127.0.0.1
+或者改为： bind-address = 0.0.0.0
+允许任意IP访问；
+或者自己指定一个IP地址。
+```
+
+
+
+### 9. 关闭linux的防火墙
 
 ```shell
 systemctl stop firewalld
+#ubuntu
+ufw disable
 ```
 
-### 15. 重启MySql服务
+### 10. 重启MySql服务
 
 ```shell
-systemctl stop firewalld
+systemctl restart mysqld
+#ubuntu
+service mysql restart
 ```
 
 
+
+## 卸载ubuntu中的Mysql
+
+```shell
+# 卸载mysql：
+1.sudo apt-get autoremove mysql* --purge
+2.sudo apt-get remove mysql-server
+3.sudo apt-get remove mysql-common
+ 
+# 清理残留数据 
+sudo dpkg -l |grep mysql|awk '{print $2}' |sudo xargs dpkg -P 
+sudo rm -rf /etc/mysql/ 
+sudo rm -rf /var/lib/mysql
+ 
+# 检查是否删除完毕
+whereis mysql
+sudo find / -name mysql
+```
 
