@@ -70,11 +70,9 @@
         points.push({
           x,
           y,
-          color
+          color,
         });
-        gl.clearColor(0, 0, 0, 1.0);
-        //用上一步设置的清空画布颜色清空画布。
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        clearBg();
         for (let i = 0; i < points.length; i++) {
           const color = points[i].color;
           //为片元着色器中的 u_Color 传递随机颜色
@@ -85,11 +83,21 @@
           gl.drawArrays(gl.POINTS, 0, 1);
         }
       });
-      // 设置清屏颜色
-      gl.clearColor(0, 0, 0, 1.0);
-      // 用上一步设置的清空画布颜色清空画布。
-      gl.clear(gl.COLOR_BUFFER_BIT);
 
+      clearBg();
+      /**
+       * 清屏并设置背景色为黑色
+       */
+      function clearBg() {
+        // 设置清屏颜色
+        gl.clearColor(0, 0, 0, 1.0);
+        // 用上一步设置的清空画布颜色清空画布。
+        gl.clear(gl.COLOR_BUFFER_BIT);
+      }
+
+      /**
+       * 获取webgl对象
+       */
       function getWebgl(canvas) {
         return (
           canvas.getContext("webgl") || canvas.getContext("experimental-webgl")
@@ -118,6 +126,9 @@
         return program;
       }
 
+      /**
+       * 创建通用shader的方法
+       */
       function createShader(shaderType, selectorId) {
         const shaderSource = document.querySelector(selectorId).innerHTML;
         const shader = gl.createShader(shaderType);
@@ -127,6 +138,9 @@
         return shader;
       }
 
+      /**
+       * 生成随机颜色
+       */
       function randomColor() {
         const r = Math.round(Math.random() * 255);
         const g = Math.round(Math.random() * 255);
@@ -135,7 +149,7 @@
           r,
           g,
           b,
-          a: 1
+          a: 1,
         };
       }
     </script>

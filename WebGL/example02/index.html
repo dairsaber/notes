@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>绘制三角形</title>
+    <script src="../lib/webgl-helper.js"></script>
+    <script src="../lib/utils.js"></script>
+  </head>
+  <body>
+    <script type="shader-source" id="vertexShader">
+      precision mediump float;
+      attribute vec2 a_Position;
+      void main(){
+          gl_Position = vec4(a_Position,0,1);
+      }
+    </script>
+    <script type="shader-source" id="fragmentShader">
+      precision mediump float;
+      uniform vec4 u_Color;
+
+      void main(){
+          vec4 color = u_Color/ vec4(255,255,255,1);
+          gl_FragColor = color;
+      }
+    </script>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+      const helper = new WebglHelper(
+        "#canvas",
+        "#vertexShader",
+        "#fragmentShader"
+      );
+
+      const gl = helper.gl;
+
+      const positions = [1, 0, 0, 1, 0, 0];
+
+      const a_Position = helper.getAttr("a_Position");
+      // 建立缓冲区
+      const buffer = gl.createBuffer();
+      // 绑定缓冲区到gl上
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      // 向缓冲区中写入数据
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(positions), // 讲js中的弱类型转换成强类型 着色器程序中的变量需要强类型数据
+        gl.STATIC_DRAW // 告诉webgl 这个数据不会频繁变化, 让webgl做一些优化处理
+      );
+      // ........将顶点组成的模型数据渲染到屏幕上........
+
+      // 告诉webgl如何从缓冲区中取数据 并传递到a_Position中
+      // 启用对应属性 a_Position
+      gl.enableVertexAttribArray(a_Position);
+
+      // 从缓冲区中读取数据的方式
+      const size = 2; // 每次取两个数据
+      const type = gl.FLOAT; // 每个数据类型都是float
+      const normalized = false; // 不需要归一化
+      const stride = 0; // 见下方解释
+      const offset = 0; // 从缓冲区开始进行读取
+
+      gl.vertexAttribPointer(
+        a_Position,
+        size,
+        type,
+        normalized,
+        stride,
+        offset
+      );
+
+      /*
+      gl.vertexAttribPointer (target, size, type, normalize, stride, offset)。
+            target： 允许哪个属性读取当前缓冲区的数据。
+
+            size：一次取几个数据赋值给 target 指定的目标属性。在我们的示例中，顶点着色器中 a_Position 是 vec2 类型，即每次接收两个数据，
+                所以 size 设置为 2。以后我们绘制立体模型的时候，a_Position 会接收三个数据，size 相应地也会设置成 3。
+
+            type：数据类型，一般而言都是浮点型。
+
+            normalize：是否需要将非浮点类型数据单位化到【-1, 1】区间。
+            stride：步长，即每个顶点所包含数据的字节数，默认是 0 ，0 表示一个属性的数据是连续存放的。
+                在我们的例子中，我们的一个顶点包含两个分量，X 坐标和 Y 坐标，每个分量都是一个 Float32 类型，占 4 个字节，
+                所以，stride = 2 * 4 = 8 个字节。但我们的例子中，缓冲区只为一个属性a_Position服务，缓冲区的数据是连续存放的，
+                因此我们可以使用默认值 0 来表示。但如果我们的缓冲区为多个属性所共用，那么 stride 就不能设置为 0 了，需要进行计算。
+
+            offset：在每个步长的数据里，目标属性需要偏移多少字节开始读取。在我们的例子中，buffer 只为 a_Position 一个属性服务，所以 offset 为 0 * 4 = 0。
+      */
+
+      // ..........绘制三角形...........
+      // 设置图元为三角形
+      const primitiveType = gl.TRIANGLES;
+      // 从顶点数组的开始位置取顶点数据
+      const drawOffset = 0;
+      // 因为我们要绘制三个点，所以执行三次顶点绘制操作
+      const count = 3;
+
+      clearBg();
+      setRandomColor();
+
+      gl.drawArrays(primitiveType, drawOffset, count);
+
+      function setRandomColor() {
+        const color = randomColor();
+        const u_Color = helper.getUniform("u_Color");
+        gl.uniform4f(u_Color, color.r, color.g, color.b, color.a);
+      }
+    </script>
+  </body>
+</html>
