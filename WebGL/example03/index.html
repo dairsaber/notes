@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>线段</title>
+    <script src="../lib/webgl-helper.js"></script>
+    <script src="../lib/utils.js"></script>
+  </head>
+  <body>
+    <script type="shader-source" id="vertexShader">
+      precision mediump float;
+      attribute vec2 a_Position;
+      attribute vec2 a_Screen_Size;
+      void main(){
+        vec2 position = (a_Position/a_Screen_Size)*2.0 -1.0;
+        position = position * vec2(1.0, -1.0);
+        gl_Position = vec4(position,0,1.0);
+      }
+    </script>
+
+    <script type="shader-source" id="fragmentShader">
+      precision mediump float;
+      uniform vec4 u_Color;
+      void main(){
+        vec4 color = u_Color/vec4(255,255,255,1);
+        gl_FragColor = color;
+      }
+    </script>
+    <div class="radios" style="position: absolute; right: 0; color: white">
+      <input type="radio" name="select" value="LINES" id="select01" checked />
+      <label for="select01">分段</label>
+      <input type="radio" name="select" value="LINE_STRIP" id="select02" />
+      <label for="select02">连续</label>
+      <input type="radio" name="select" value="LINE_LOOP" id="select03" />
+      <label for="select02">闭合</label>
+    </div>
+    <canvas id="canvas"></canvas>
+    <script>
+      const canvas = document.querySelector("#canvas");
+      resizeCanvas(canvas);
+
+      const helper = new WebglHelper(
+        canvas,
+        "#vertexShader",
+        "#fragmentShader"
+      );
+      const gl = helper.gl;
+      // 获取a_Screen_Size 用于将屏幕坐标系转换成裁剪坐标系
+      const a_Screen_Size = helper.getAttr("a_Screen_Size");
+      gl.vertexAttrib2f(a_Screen_Size, canvas.width, canvas.height);
+      // 获取a_Position
+      const a_Position = helper.getAttr("a_Position");
+      // 新建存储点坐标的容器
+      let positions = [];
+      // 新建buffer
+      const buffer = gl.createBuffer();
+      // 绑定buffer
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      // 启用buffer
+      gl.enableVertexAttribArray(a_Position);
+      // 新建取数据的指针
+      gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+      let primitiveType = gl.LINES;
+      // 注册事件
+      canvas.addEventListener("mouseup", (e) => {
+        positions.push(e.pageX - 10, e.pageY - 10);
+
+        if (positions.length > 0) {
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(positions),
+            gl.DYNAMIC_DRAW
+          );
+          render(gl, primitiveType);
+        }
+      });
+
+      setRandomColor();
+      clearBg();
+
+      function render(gl, primitiveType = gl.LINES) {
+        clearBg();
+        //线条有几种选择 LINES,LINE_STRIP,LINE_LOOP
+        gl.drawArrays(primitiveType, 0, positions.length / 2);
+      }
+
+      function setRandomColor() {
+        const color = randomColor();
+        const u_Color = helper.getUniform("u_Color");
+        gl.uniform4f(u_Color, color.r, color.g, color.b, color.a);
+      }
+      const radios = document.querySelector(".radios");
+
+      radios.addEventListener("input", (e) => {
+        primitiveType = gl[e.target.value];
+        positions = [];
+        clearBg();
+        render(gl, primitiveType);
+      });
+    </script>
+  </body>
+</html>
