@@ -31,3 +31,11 @@ function resizeCanvas(canvas, width, height) {
     canvas.height = height ? height : window.innerHeight;
   }
 }
+
+function getElement(selector) {
+  return document.querySelector(selector);
+}
+
+function getElements(selector) {
+  return document.querySelectorAll(selector);
+}
