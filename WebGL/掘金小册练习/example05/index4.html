@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>三角扇绘制矩形</title>
+    <script src="../lib/utils.js"></script>
+    <script src="../lib/webgl-helper.js"></script>
+  </head>
+  <body>
+    <script type="shader-source" id="vertexShader">
+      precision mediump float;
+      attribute vec2 a_Position;
+      attribute vec2 a_Screen_Size;
+      attribute vec4 a_Color;
+      varying vec4 v_Color;
+      void main(){
+        vec2 position = (a_Position / a_Screen_Size) * 2.0 - 1.0;
+        position = position * vec2(1.0, -1.0);
+        gl_Position = vec4(position, 0 , 1.0);
+        v_Color = a_Color/vec4(255,255,255,1);
+      }
+    </script>
+    <script type="shader-source" id="fragmentShader">
+      precision mediump float;
+      varying vec4 v_Color;
+      void main(){
+        gl_FragColor = v_Color;
+      }
+    </script>
+    <canvas id="canvas"></canvas>
+
+    <script>
+      const canvas = getElement("#canvas");
+      resizeCanvas(canvas);
+
+      const helper = new WebglHelper(canvas, "#vertexShader", "#fragmentShader");
+      const gl = helper.gl;
+
+      const a_Position = helper.getAttr("a_Position");
+      const a_Color = helper.getAttr("a_Color");
+      const a_Screen_Size = helper.getAttr("a_Screen_Size");
+      gl.vertexAttrib2f(a_Screen_Size, canvas.width, canvas.height);
+      //prettier-ignore
+      const cacheArray = [
+        165, 165, 255, 255, 0, 1, //V0  中心点 这个可省略
+        30, 30, 255, 0, 0, 1,    //V1   逆时针环绕
+        30, 300, 255, 0, 0, 1,   //V2
+        300, 300, 255, 0, 0, 1,  //V3
+        300, 30, 0, 255, 0, 1,   //V4
+        30, 30, 255, 0, 0, 1,    //V1
+      ]
+      /**
+       * 备注
+       * 如果顶点是顺时针的话
+       * 开启背面剔除功能 gl.enable(gl.CULL_FACE); 则我们啥也看不到 顺时针画的是背面
+       * 当然，我们也可以更改面的显示方式，默认显示正面，我们可以通过如下方式，剔除正面，只显示背面
+       * gl.cullFace(gl.FRONT);
+       */
+
+      const buffer = gl.createBuffer();
+      gl.enableVertexAttribArray(a_Color);
+      gl.enableVertexAttribArray(a_Position);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cacheArray), gl.STATIC_DRAW);
+
+      gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 24, 0);
+      gl.vertexAttribPointer(a_Color, 4, gl.FLOAT, false, 24, 8);
+
+      render(gl);
+
+      function render(gl) {
+        clearBg();
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, cacheArray.length / 6);
+      }
+    </script>
+  </body>
+</html>

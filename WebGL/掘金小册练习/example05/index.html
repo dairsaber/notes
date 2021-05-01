@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>矩形</title>
+    <script src="../lib/utils.js"></script>
+    <script src="../lib/webgl-helper.js"></script>
+  </head>
+  <body>
+    <script type="shader-source" id="vertexShader">
+      precision mediump float;
+      attribute vec2 a_Position;
+      attribute vec2 a_Screen_Size;
+      attribute vec4 a_Color;
+      varying vec4 v_Color;
+      void main(){
+        vec2 position = (a_Position / a_Screen_Size) * 2.0 - 1.0;
+        position = position * vec2(1.0, -1.0);
+        gl_Position = vec4(position, 0 , 1.0);
+        v_Color = a_Color/vec4(255,255,255,1);
+      }
+    </script>
+    <script type="shader-source" id="fragmentShader">
+      precision mediump float;
+      varying vec4 v_Color;
+      void main(){
+        gl_FragColor = v_Color;
+      }
+    </script>
+    <canvas id="canvas"></canvas>
+    <script>
+      const canvas = getElement("#canvas");
+      resizeCanvas(canvas);
+
+      const helper = new WebglHelper(canvas, "#vertexShader", "#fragmentShader");
+      const gl = helper.gl;
+
+      const a_Position = helper.getAttr("a_Position");
+      const a_Color = helper.getAttr("a_Color");
+      const a_Screen_Size = helper.getAttr("a_Screen_Size");
+
+      // 设置坐标
+      gl.vertexAttrib2f(a_Screen_Size, canvas.width, canvas.height);
+
+      // 声明缓存存储数组 6为一组 前两位坐标 后4位颜色
+      // prettier-ignore
+      const cacheArray = [
+          30,   30,   255,  0,    0,  1,      //V0
+          30,   300,  255,  0,    0,  1,      //V1
+          300,  300,  255,  0,    0,  1,      //V2
+          30,   30,   0,    255,  0,  1,      //V0
+          300,  300,  0,    255,  0,  1,      //V2
+          300,  30,   0,    255,  0,  1       //V3
+        ];
+
+      const buffer = gl.createBuffer();
+      //绑定buffer
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      //指定指针
+      gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 24, 0);
+      gl.enableVertexAttribArray(a_Position);
+
+      gl.vertexAttribPointer(a_Color, 4, gl.FLOAT, false, 24, 8);
+      gl.enableVertexAttribArray(a_Color);
+
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cacheArray), gl.STATIC_DRAW);
+      render(gl);
+
+      function render(gl) {
+        clearBg();
+        gl.drawArrays(gl.TRIANGLES, 0, cacheArray.length / 6);
+      }
+    </script>
+  </body>
+</html>

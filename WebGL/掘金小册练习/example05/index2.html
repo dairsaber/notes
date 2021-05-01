@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>索引方式构建矩形</title>
+    <script src="../lib/utils.js"></script>
+    <script src="../lib/webgl-helper.js"></script>
+  </head>
+  <body>
+    <!-- 在index中我们存储了6个点 其实绘制矩形我们只用到了4个点 有两个点完全冗余 接下来就用索引的方式绘制一个矩形 -->
+    <script type="shader-source" id="vertexShader">
+      precision mediump float;
+
+      attribute vec2 a_Position;
+      attribute vec2 a_Screen_Size;
+      attribute vec4 a_Color;
+      varying vec4 v_Color;
+
+      void main(){
+        vec2 position = (a_Position / a_Screen_Size) * 2.0 - 1.0;
+        position = position * vec2(1.0, -1.0);
+        gl_Position = vec4(position, 0 , 1);
+        v_Color = a_Color / vec4(255, 255, 255, 1);
+      }
+    </script>
+
+    <script type="shader-source" id="fragmentShader">
+      precision mediump float;
+
+      varying vec4 v_Color;
+
+      void main(){
+        gl_FragColor = v_Color;
+      }
+    </script>
+
+    <canvas id="canvas"></canvas>
+    <script>
+      const canvas = getElement("#canvas");
+      resizeCanvas(canvas);
+      const helper = new WebglHelper(canvas, "#vertexShader", "#fragmentShader");
+      const gl = helper.gl;
+      //prettier-ignore
+      const cacheArray = [
+        30, 30, 255, 0, 0, 1,    //V0
+        30, 300, 255, 0, 0, 1,   //V1
+        300, 300, 255, 0, 0, 1,  //V2
+        300, 30, 0, 255, 0, 1    //V3
+      ];
+      // 建立索引
+      //prettier-ignore
+      const indices = [
+        0, 1, 2, //第一个三角形
+        0, 2, 3  //第二个三角形
+      ];
+
+      const a_Position = helper.getAttr("a_Position");
+      const a_Screen_Size = helper.getAttr("a_Screen_Size");
+      const a_Color = helper.getAttr("a_Color");
+
+      gl.vertexAttrib2f(a_Screen_Size, canvas.width, canvas.height);
+
+      const buffer = gl.createBuffer();
+      const indicesBuffer = gl.createBuffer();
+
+      gl.enableVertexAttribArray(a_Position);
+      gl.enableVertexAttribArray(a_Color);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 24, 0);
+      gl.vertexAttribPointer(a_Color, 4, gl.FLOAT, false, 24, 8);
+      //装载数据
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cacheArray), gl.STATIC_DRAW);
+
+      // 绑定索引buffer
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+      render(gl);
+      /**
+       * void gl.drawElements(mode, count, type, offset);
+       * mode：指定绘制图元的类型，是画点，还是画线，或者是画三角形。
+       * count：指定绘制图形的顶点个数。
+       * type：指定索引缓冲区中的值的类型,常用的两个值：gl.UNSIGNED_BYTE和gl.UNSIGNED_SHORT，前者为无符号8位整数值，后者为无符号16位整数。
+       * offset：指定索引数组中开始绘制的位置，以字节为单位。
+       *
+       */
+      function render(gl) {
+        clearBg();
+        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+      }
+    </script>
+  </body>
+</html>
