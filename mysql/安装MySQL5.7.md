@@ -364,3 +364,30 @@ whereis mysql
 sudo find / -name mysql
 ```
 
+
+
+
+
+#  Mac brew 安装mysql
+
+```shell
+# 先搜索可安装版本
+brew search mysql
+# 安装mysql
+brew install mysql@5.7
+# 安装 brew 服务，通过brew管理mysql启动停止
+brew tap homebrew/services
+# 加载和启动mysql服务
+brew services start mysql@5.7
+# 检查mysql服务是否已加载
+brew services list 
+# 强制链接5.7版本
+brew link mysql@5.7 --force
+# 验证安装mysql 是否成功
+mysql -V
+# 初始化密码 更改你自己密码 
+mysqladmin -u root password 'yourpassword'
+```
+
+
+
