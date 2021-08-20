@@ -7,5 +7,11 @@
    -d redis:4.0
    ```
 
-3. 
+3. windows中
+
+   ```shell
+   docker run -p 6379:6379 --name redis4.0 -d redis:4.0
+   ```
+
+   
 
