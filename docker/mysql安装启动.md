@@ -84,5 +84,35 @@
 
    
 
+   ```shell
+   # mysql8.0 的安装
+   
+   docker pull mysql:8.0
+   
+   mkdir -p ~/docker/mysql8.0/conf
+   mkdir -p ~/docker/mysql8.0/data
+   
+   vim Users/dairsaber/docker/mysql8.0/conf/my.cnf
+   
+   # 粘贴上面mac的配置内容
+   ```
+   
+   
+   
+   
+   
+   ```shell
+   docker run \
+   --name mysql8 \
+   --restart=unless-stopped \
+   -it -p 3306:3306 \
+   -v ~/docker/mysql8.0/conf/my.cnf:/etc/mysql/my.cnf \
+   -v ~/docker/mysql8.0/data:/var/lib/mysql \
+   -e MYSQL_ROOT_PASSWORD=123456 \
+   -d mysql:8.0
+   ```
+   
+   
+   
    
 
